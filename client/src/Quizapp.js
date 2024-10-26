@@ -362,115 +362,81 @@ function Quizapp() {
         }, 1000); // Feedback duration
     };
 
-    const handleSectionChange = (section) => {
-        setCurrentSection(section);
+    const handleRestartQuiz = () => {
         setCurrentQuestion(0);
         setScore(0);
         setShowScore(false);
-        setTimer(240); // Reset timer for the new section
         setFeedback("");
+        setTimer(240); // Reset timer to 4 minutes
         setQuizCompleted(false);
     };
 
-    const storeScore = (finalScore) => {
-        localStorage.setItem('quizScore', finalScore);
+    const handleSectionChange = (section) => {
+        setCurrentSection(section);
+        handleRestartQuiz(); // Reset quiz when changing section
     };
 
-    const renderSectionButtons = () => {
-        return Object.keys(questions).map((section) => (
-            <button key={section} onClick={() => handleSectionChange(section)}>
-                {section}
-            </button>
-        ));
+    const storeScore = (score) => {
+        const previousScores = JSON.parse(localStorage.getItem("quizScores")) || {};
+        previousScores[currentSection] = score;
+        localStorage.setItem("quizScores", JSON.stringify(previousScores));
     };
 
-    const renderQuestion = () => {
-        const questionData = questions[currentSection][currentQuestion];
-        return (
-            <div>
-                <h2>{questionData.question}</h2>
-                <div>
-                    {questionData.options.map((option, index) => (
-                        <button key={index} onClick={() => handleAnswerOptionClick(index)}>
-                            {option}
-                        </button>
-                    ))}
+    const renderConfetti = () => {
+        if (quizCompleted && score >= questions[currentSection].length * 0.8) {
+            // Confetti effect for high scores (>= 80%)
+            return (
+                <div style = {{color: "red", fontSize: "1.3rem"}}className="confetti">
+                    🎉 Congratulations! You did great! 🎉
                 </div>
-            </div>
-        );
+            );
+        }
+
+        else{
+
+            return(
+                <div style = {{color: "red", fontSize: "1.3rem"}}className="confetti">
+                    💔 Better luck next time 💔
+                </div>
+            );
+
+        }
+        
     };
-
-    const confetti = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        document.body.appendChild(canvas);
-        const ctx = canvas.getContext('2d');
-        const particles = [];
-
-        for (let i = 0; i < 100; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                radius: Math.random() * 5 + 1,
-                color: `hsl(${Math.random() * 360}, 100%, 50%)`,
-                speedY: Math.random() * 5 + 1,
-                angle: Math.random() * 2 * Math.PI,
-            });
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach((p) => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = p.color;
-                ctx.fill();
-                p.x += Math.cos(p.angle) * p.speedY;
-                p.y += Math.sin(p.angle) * p.speedY;
-                p.radius *= 0.95; // Fade out effect
-            });
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        setTimeout(() => {
-            document.body.removeChild(canvas);
-        }, 3000);
-    };
-
-    useEffect(() => {
-        if (quizCompleted) {
-            confetti(); // Trigger confetti animation on quiz completion
-        }
-    }, [quizCompleted]);
 
     return (
         <div className="quiz-app">
-            <h1 style = {{color: "coral"}}>Beginner Questions</h1>
+            <h1 style = {{color: 'coral'}}>{currentSection} Beginner Questions</h1>
+            <div className="timer">Time left: {timer} seconds</div>
+            <div className="section-buttons">
+                <button style = {{backgroundColor: 'wheat'}}onClick={() => handleSectionChange("HTML")}>HTML</button>
+                <button style = {{backgroundColor: 'purple'}}onClick={() => handleSectionChange("JavaScript")}>JavaScript</button>
+                <button style = {{backgroundColor: 'grey'}}onClick={() => handleSectionChange("Python")}>Python</button>
+            </div>
             {showScore ? (
                 <div className="score-section">
-                    <h2>You scored: {score} out of {questions[currentSection].length}</h2>
-                    <div className="feedback">
-                        {score >= questions[currentSection].length / 2 ? 'Great job!' : 'Better luck next time!'}
-                    </div>
+                    <h2>Your Score: {score} / {questions[currentSection].length}</h2>
+                    <p style = {{color: "red", fontSize: '1.2rem'}}>{Math.floor((score / questions[currentSection].length) * 100)}%</p> {/* Whole number percentage */}
+                    <button onClick={handleRestartQuiz}>Restart Quiz</button>
+                    {renderConfetti()}
                 </div>
             ) : (
-                <div>
-                    <div className="timer">
-                        <h3>Time Remaining: {Math.floor(timer / 60)}:{('0' + (timer % 60)).slice(-2)}</h3>
+                <div className="question-section">
+                    <h2 style = {{color: 'blue'}}>
+                        Question {currentQuestion + 1}/{questions[currentSection].length}
+                    </h2>
+                    <p style = {{color: 'coral', fontSize: '1.4rem'}}>{questions[currentSection][currentQuestion].question}</p>
+                    <div className="options-section">
+                        {questions[currentSection][currentQuestion].options.map((option, index) => (
+                            <button
+                                key={index}
+                                onClick={() => handleAnswerOptionClick(index)}
+                            >
+                                {option}
+                            </button>
+                        ))}
                     </div>
-                    <div className="feedback">
-                        <h3 style = {{color: "coral"}}>{feedback}</h3>
-                    </div>
-                    {quizCompleted ? (
-                        <h3 style = {{color: "coral"}}>Quiz Completed!</h3>
-                    ) : (
-                        renderQuestion()
-                    )}
-                    <div className="section-buttons">
-                        {renderSectionButtons()}
-                    </div>
+                    <div style = {{color: 'coral'}} className="feedback">{feedback}</div>
                 </div>
             )}
         </div>
