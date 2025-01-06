@@ -327,7 +327,7 @@ function Quizapp() {
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [timer, setTimer] = useState(120); // Timer set to 2 minutes (120 seconds)
+  const [timer, setTimer] = useState(70); // Timer set to 1 minute and 10 seconds (70 seconds)
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [incorrectAnswers, setIncorrectAnswers] = useState([]); // Track incorrect answers
 
@@ -372,7 +372,7 @@ function Quizapp() {
       setScore(0);
       setShowScore(false);
       setFeedback("");
-      setTimer(120); // Reset timer to 2 minutes
+      setTimer(70); // Reset timer to 1 minute and 10 seconds
       setQuizCompleted(false);
       setIncorrectAnswers([]); // Reset incorrect answers
   };
