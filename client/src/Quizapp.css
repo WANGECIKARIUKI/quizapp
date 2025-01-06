@@ -60,6 +60,32 @@ button:hover {
     background-color: #0056b3;
 }
 
+.victory-dance {
+    color: gold;
+    font-size: 2rem;
+    font-weight: bold;
+    animation: dance 2s infinite;
+}
+
+@keyframes dance {
+    0% {
+        transform: translateY(0) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-10px) rotate(15deg);
+    }
+    50% {
+        transform: translateY(0) rotate(0deg);
+    }
+    75% {
+        transform: translateY(-10px) rotate(-15deg);
+    }
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+}
+
+
 /* Responsive Styles */
 @media (max-width: 600px) {
     .quiz-app {

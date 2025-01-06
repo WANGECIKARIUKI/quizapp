@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Quizapp.css';
+import Confetti from 'react-confetti'; 
 
 const questions = {
   HTML: [
@@ -321,126 +322,155 @@ const questions = {
 };
 
 function Quizapp() {
-    const [currentSection, setCurrentSection] = useState("HTML");
-    const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [score, setScore] = useState(0);
-    const [showScore, setShowScore] = useState(false);
-    const [feedback, setFeedback] = useState("");
-    const [timer, setTimer] = useState(240); // Timer set to 4 minutes (240 seconds)
-    const [quizCompleted, setQuizCompleted] = useState(false);
+  const [currentSection, setCurrentSection] = useState("HTML");
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showScore, setShowScore] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [timer, setTimer] = useState(120); // Timer set to 2 minutes (120 seconds)
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [incorrectAnswers, setIncorrectAnswers] = useState([]); // Track incorrect answers
 
-    useEffect(() => {
-        let timerId;
-        if (timer > 0 && !showScore) {
-            timerId = setInterval(() => setTimer((prev) => prev - 1), 1000);
-        } else if (timer === 0) {
-            setShowScore(true);
-            setQuizCompleted(true); // Mark quiz as completed when timer runs out
-        }
-        return () => clearInterval(timerId);
-    }, [timer, showScore]);
+  useEffect(() => {
+      let timerId;
+      if (timer > 0 && !showScore) {
+          timerId = setInterval(() => setTimer((prev) => prev - 1), 1000);
+      } else if (timer === 0) {
+          setShowScore(true);
+          setQuizCompleted(true); // Mark quiz as completed when timer runs out
+      }
+      return () => clearInterval(timerId);
+  }, [timer, showScore]);
 
-    const handleAnswerOptionClick = (index) => {
-        if (index === questions[currentSection][currentQuestion].answer) {
-            setScore(score + 1);
-            setFeedback("Correct!");
-        } else {
-            setFeedback("Incorrect!");
-        }
+  const handleAnswerOptionClick = (index) => {
+      const currentQ = questions[currentSection][currentQuestion];
 
-        const nextQuestion = currentQuestion + 1;
-        if (nextQuestion < questions[currentSection].length) {
-            setCurrentQuestion(nextQuestion);
-        } else {
-            setShowScore(true);
-            setQuizCompleted(true);
-            storeScore(score);
-        }
+      if (index === currentQ.answer) {
+          setScore(score + 1);
+          setFeedback("Correct!");
+      } else {
+          setFeedback("Incorrect!");
+          setIncorrectAnswers(prev => [...prev, currentQ]); // Track the incorrect answer
+      }
 
-        setTimeout(() => {
-            setFeedback("");
-        }, 1000); // Feedback duration
-    };
+      const nextQuestion = currentQuestion + 1;
+      if (nextQuestion < questions[currentSection].length) {
+          setCurrentQuestion(nextQuestion);
+      } else {
+          setShowScore(true);
+          setQuizCompleted(true);
+          storeScore(score);
+      }
 
-    const handleRestartQuiz = () => {
-        setCurrentQuestion(0);
-        setScore(0);
-        setShowScore(false);
-        setFeedback("");
-        setTimer(240); // Reset timer to 4 minutes
-        setQuizCompleted(false);
-    };
+      setTimeout(() => {
+          setFeedback("");
+      }, 1000); // Feedback duration
+  };
 
-    const handleSectionChange = (section) => {
-        setCurrentSection(section);
-        handleRestartQuiz(); // Reset quiz when changing section
-    };
+  const handleRestartQuiz = () => {
+      setCurrentQuestion(0);
+      setScore(0);
+      setShowScore(false);
+      setFeedback("");
+      setTimer(120); // Reset timer to 2 minutes
+      setQuizCompleted(false);
+      setIncorrectAnswers([]); // Reset incorrect answers
+  };
 
-    const storeScore = (score) => {
-        const previousScores = JSON.parse(localStorage.getItem("quizScores")) || {};
-        previousScores[currentSection] = score;
-        localStorage.setItem("quizScores", JSON.stringify(previousScores));
-    };
+  const handleSectionChange = (section) => {
+      setCurrentSection(section);
+      handleRestartQuiz(); // Reset quiz when changing section
+  };
 
-    const renderConfetti = () => {
-        if (quizCompleted && score >= questions[currentSection].length * 0.8) {
-            // Confetti effect for high scores (>= 80%)
-            return (
-                <div style = {{color: "red", fontSize: "1.3rem"}}className="confetti">
-                    🎉 Congratulations! You did great! 🎉
-                </div>
-            );
-        }
+  const storeScore = (score) => {
+      const previousScores = JSON.parse(localStorage.getItem("quizScores")) || {};
+      previousScores[currentSection] = score;
+      localStorage.setItem("quizScores", JSON.stringify(previousScores));
+  };
 
-        else{
-
-            return(
-                <div style = {{color: "red", fontSize: "1.3rem"}}className="confetti">
-                    💔 Better luck next time 💔
-                </div>
-            );
-
-        }
-        
-    };
-
-    return (
-        <div className="quiz-app">
-            <h1 style = {{color: 'coral'}}>{currentSection} Beginner Questions</h1>
-            <div className="timer">Time left: {timer} seconds</div>
-            <div className="section-buttons">
-                <button style = {{backgroundColor: 'wheat'}}onClick={() => handleSectionChange("HTML")}>HTML</button>
-                <button style = {{backgroundColor: 'purple'}}onClick={() => handleSectionChange("JavaScript")}>JavaScript</button>
-                <button style = {{backgroundColor: 'grey'}}onClick={() => handleSectionChange("Python")}>Python</button>
+  const renderConfetti = () => {
+      if (quizCompleted && score >= questions[currentSection].length * 0.8) {
+          return (
+              <>
+                  <Confetti width={window.innerWidth} height={window.innerHeight} />
+                  <div className="victory-dance">
+                      🎉 Congratulations! You did great! 🎉
+                  </div>
+              </>
+          );
+      } else {
+          return (
+            <>
+            <Confetti width={window.innerWidth} height={window.innerHeight} />
+            <div className="victory-dance">
+            💔 Better luck next time 💔
             </div>
-            {showScore ? (
-                <div className="score-section">
-                    <h2>Your Score: {score} / {questions[currentSection].length}</h2>
-                    <p style = {{color: "red", fontSize: '1.2rem'}}>{Math.floor((score / questions[currentSection].length) * 100)}%</p> {/* Whole number percentage */}
-                    <button onClick={handleRestartQuiz}>Restart Quiz</button>
-                    {renderConfetti()}
-                </div>
-            ) : (
-                <div className="question-section">
-                    <h2 style = {{color: 'blue'}}>
-                        Question {currentQuestion + 1}/{questions[currentSection].length}
-                    </h2>
-                    <p style = {{color: 'coral', fontSize: '1.4rem'}}>{questions[currentSection][currentQuestion].question}</p>
-                    <div className="options-section">
-                        {questions[currentSection][currentQuestion].options.map((option, index) => (
-                            <button
-                                key={index}
-                                onClick={() => handleAnswerOptionClick(index)}
-                            >
-                                {option}
-                            </button>
-                        ))}
-                    </div>
-                    <div style = {{color: 'coral'}} className="feedback">{feedback}</div>
-                </div>
-            )}
-        </div>
-    );
+        </>
+          );
+      }
+  };
+
+  const generateSuggestions = () => {
+      let suggestions = [];
+      incorrectAnswers.forEach((question) => {
+          if (question.section === "HTML") {
+              suggestions.push("Read more about HTML tags and elements.");
+          } else if (question.section === "JavaScript") {
+              suggestions.push("Brush up on JavaScript syntax and operators.");
+          } else if (question.section === "Python") {
+              suggestions.push("Study Python data types and loops.");
+          }
+      });
+
+      return suggestions;
+  };
+
+  return (
+      <div className="quiz-app">
+          <h1 style={{ color: 'coral' }}>{currentSection} Beginner Questions</h1>
+          <div className="timer">Time left: {timer} seconds</div>
+          <div className="section-buttons">
+              <button style={{ backgroundColor: 'wheat' }} onClick={() => handleSectionChange("HTML")}>HTML</button>
+              <button style={{ backgroundColor: 'purple' }} onClick={() => handleSectionChange("JavaScript")}>JavaScript</button>
+              <button style={{ backgroundColor: 'grey' }} onClick={() => handleSectionChange("Python")}>Python</button>
+          </div>
+          {showScore ? (
+              <div className="score-section">
+                  <h2>Your Score: {score} / {questions[currentSection].length}</h2>
+                  <p style={{ color: "red", fontSize: '1.2rem' }}>{Math.floor((score / questions[currentSection].length) * 100)}%</p>
+                  <button onClick={handleRestartQuiz}>Restart Quiz</button>
+                  {renderConfetti()}
+                  {/* Display Suggestions */}
+                  <div>
+                      <h3>Suggestions for Improvement:</h3>
+                      <ul>
+                          {generateSuggestions().map((suggestion, index) => (
+                              <li key={index}>{suggestion}</li>
+                          ))}
+                      </ul>
+                  </div>
+              </div>
+          ) : (
+              <div className="question-section">
+                  <h2 style={{ color: 'blue' }}>
+                      Question {currentQuestion + 1}/{questions[currentSection].length}
+                  </h2>
+                  <p style={{ color: 'coral', fontSize: '1.4rem' }}>{questions[currentSection][currentQuestion].question}</p>
+                  <div className="options-section">
+                      {questions[currentSection][currentQuestion].options.map((option, index) => (
+                          <button
+                              key={index}
+                              onClick={() => handleAnswerOptionClick(index)}
+                          >
+                              {option}
+                          </button>
+                      ))}
+                  </div>
+                  <div style={{ color: 'coral' }} className="feedback">{feedback}</div>
+              </div>
+          )}
+      </div>
+  );
 }
 
 export default Quizapp;
